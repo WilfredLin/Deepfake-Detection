@@ -1,0 +1,35 @@
+import cv2
+import numpy as np
+from keras.models import load_model
+
+# Load the pre-trained deepfake detection model
+model = load_model('deepfake_detection_model.h5')
+
+# Function to preprocess the input video frame
+def preprocess_frame(frame):
+    frame = cv2.resize(frame, (224, 224))  # Resize to the model's input size
+    frame = frame.astype('float32') / 255.0  # Normalize pixel values
+    return np.expand_dims(frame, axis=0)  # Add batch dimension
+
+# Function to detect deepfake in a video
+def detect_deepfake(video_path):
+    cap = cv2.VideoCapture(video_path)
+    results = []
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        processed_frame = preprocess_frame(frame)
+        prediction = model.predict(processed_frame)
+        results.append(prediction[0][0])  # Assuming binary classification
+
+    cap.release()
+    return results
+
+# Example usage
+if __name__ == '__main__':
+    video_path = 'path_to_your_video.mp4'
+    predictions = detect_deepfake(video_path)
+    print(predictions)  # Output predictions for each frame
